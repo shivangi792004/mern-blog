@@ -12,14 +12,14 @@
 
 ## 🎯 Architectural Highlights & SDE Decisions
 
-| Feature / Problem | Naive Implementation | DevPulse SDE Implementation |
+| Feature / Problem | Naive Implementation | Personal Blog SDE Implementation |
 |---|---|---|
 | **Query Latency (N+1 Problem)** | Client fetches user profile for every single comment individually (`useEffect` loop) | Enriched comment model with pre-populated author metadata & Mongoose batch queries, reducing N+1 roundtrips to **0**. |
 | **Token Storage & XSS** | Storing JWT in `localStorage` (vulnerable to script theft) | Strict **`HttpOnly` + `SameSite` + `Secure`** cookie storage with zero JavaScript access. |
 | **Client-Side HTML Injection** | Direct `dangerouslySetInnerHTML` rendering of WYSIWYG HTML | Multi-pass **`DOMPurify`** sanitization preventing stored XSS exploits. |
 | **Brute-Force & DoS Mitigation** | Unrestricted endpoints open to credential-stuffing | Sliding window **`express-rate-limit`** on auth routes (100 req/15min). |
 | **Slug Duplication Crashes** | Unhandled MongoDB `E11000` duplicate key errors on identical post titles | Collision-proof regex slug generator with automatic collision-counter suffix fallback. |
-| **Recruiter Review Friction** | Requires manual account creation and email verification | **1-Click Instant Demo Authentication** (`Demo Admin` & `Demo Author` modes). |
+| **Author / Demo Friction** | Requires manual account creation and email verification | **1-Click Instant Demo Authentication** (`Demo Admin` & `Demo Author` modes). |
 
 ---
 
@@ -28,14 +28,14 @@
 ```mermaid
 graph TD
     Client["React 18 SPA (Vite + Redux Toolkit + Tailwind CSS)"]
-    
-    subgraph Security Layer
+
+    subgraph Security["Security & Middleware Layer"]
         RateLimiter["express-rate-limit (100 req / 15 min)"]
         CorsMiddleware["CORS (Credentials Allowed)"]
         CookieParser["cookie-parser (HttpOnly Access Token)"]
     end
-    
-    subgraph Express MVC Server
+
+    subgraph Express["Express MVC Server"]
         API["Express Router (/api)"]
         HealthEndpoint["/api/health (System Metrics)"]
         AuthCtrl["Auth Controller (JWT + Demo Login)"]
@@ -43,29 +43,25 @@ graph TD
         UserCtrl["User Controller (Profile, Bookmarks)"]
         CommentCtrl["Comment Controller (Zero N+1)"]
     end
-    
-    subgraph Data Persistence
-        MongoDB[("MongoDB Atlas Cloud Database")]
-        UserColl["Users (Indexed by email & username)"]
-        PostColl["Posts (Indexed by slug & category)"]
-        CommentColl["Comments (Indexed by postId)"]
+
+    subgraph Database["MongoDB Atlas Cloud Database"]
+        UserColl[("Users Collection")]
+        PostColl[("Posts Collection")]
+        CommentColl[("Comments Collection")]
     end
 
-    Client -->|HTTP Requests / REST| SecurityLayer
-    Security Layer --> API
+    Client -->|HTTP / REST| Security
+    Security --> API
     API --> AuthCtrl
     API --> PostCtrl
     API --> UserCtrl
     API --> CommentCtrl
     API --> HealthEndpoint
-    
+
     AuthCtrl --> UserColl
     PostCtrl --> PostColl
     UserCtrl --> UserColl
     CommentCtrl --> CommentColl
-    
-    PostColl -.->|Schema Population| UserColl
-    CommentColl -.->|Schema Population| UserColl
 ```
 
 ---
