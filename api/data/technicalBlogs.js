@@ -1,6 +1,6 @@
-// Production-grade, educational engineering publications by Shivangi Singh
-// Written in an engaging, authoritative technical style with real-world scenarios,
-// architectural diagrams, line-by-line code breakdowns, benchmark comparisons, and practical takeaways.
+// 10 Publication-Grade, Educational Engineering Masterclasses by Shivangi Singh
+// Structured with engaging storytelling hooks, callout boxes, production-ready code,
+// real benchmark comparison tables, architectural diagrams, and actionable takeaways.
 
 export const REAL_TECHNICAL_BLOGS = [
   {
@@ -40,8 +40,6 @@ CMD ["node", "api/index.js"]</code></pre>
 <h2>2. The Multi-Stage Build Solution: Separation of Concerns</h2>
 <p>Multi-stage builds allow us to define temporary build environments (stages) that compile assets, and then copy <em>only</em> the final compiled artifacts into a lean, hardened production runtime container. Everything else—node modules, build caches, and compilers—is discarded.</p>
 
-<p>Here is the production-grade, hardened Dockerfile used in this architecture:</p>
-
 <pre><code># ==============================================================================
 # STAGE 1: Client Builder (Compiles Vite React SPA)
 # ==============================================================================
@@ -75,7 +73,6 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Security Hardening: Never run production containers as root!
-# Alpine includes an unprivileged 'node' user out of the box.
 RUN chown -R node:node /app
 
 # Copy production node_modules from Stage 2
@@ -93,19 +90,9 @@ USER node
 
 EXPOSE 3000
 
-# Start server with graceful shutdown handling
 CMD ["node", "api/index.js"]</code></pre>
 
-<h2>3. Deep Dive: Why Each Line Matters</h2>
-<p>Let's break down the engineering decisions embedded in this multi-stage setup:</p>
-<ol>
-  <li><strong><code>FROM node:20-alpine</code>:</strong> Rather than using the default Debian-based Node image (~1.1 GB), Alpine Linux is a security-focused distribution that strips away unnecessary system binaries, starting at a base size of just <strong>5 MB</strong>.</li>
-  <li><strong><code>npm ci</code> instead of <code>npm install</code>:</strong> <code>npm ci</code> (Clean Install) strictly adheres to <code>package-lock.json</code>, never modifies dependency trees, and is up to <strong>2.5x faster</strong> because it bypasses package resolution algorithms.</li>
-  <li><strong>Isolated Layer Caching:</strong> By copying <code>package*.json</code> and running <code>npm ci</code> before copying application code, Docker caches your dependency layer. When you push daily code changes, Docker skips the npm install step entirely, compiling your image in <strong>under 15 seconds</strong>!</li>
-  <li><strong><code>USER node</code>:</strong> By switching away from root, we adhere to the principle of least privilege. Even in the event of an exploit, the attacker cannot modify system binaries or escape the container namespace.</li>
-</ol>
-
-<h2>4. Benchmarking the Transformation</h2>
+<h2>3. Benchmarking the Transformation</h2>
 <table class="w-full text-left text-sm border my-6">
   <thead>
     <tr class="border-b bg-slate-100 dark:bg-slate-800">
@@ -143,7 +130,7 @@ CMD ["node", "api/index.js"]</code></pre>
   </tbody>
 </table>
 
-<h2>5. Summary & Key Takeaways</h2>
+<h2>4. Summary & Key Takeaways</h2>
 <ul>
   <li>Always use multi-stage builds to separate compiler environments from runtime artifacts.</li>
   <li>Leverage <code>node:alpine</code> for minimal attack surfaces and sub-150MB image footprints.</li>
@@ -190,26 +177,22 @@ const redis = new Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379', {
  */
 export const getCachedOrFetch = async (key, fetchFn, baseTtl = 300) => {
   try {
-    // 1. Attempt cache retrieval
     const cached = await redis.get(key);
     if (cached) {
       return JSON.parse(cached);
     }
   } catch (err) {
-    // Graceful degradation: If Redis fails, log warning and fall back to database
     console.warn('Redis Cache Read Warning:', err.message);
   }
 
-  // 2. Execute primary database query on cache miss
   const freshData = await fetchFn();
   if (!freshData) return null;
 
-  // 3. Add +/- 15% random jitter to base TTL to prevent Cache Avalanche
+  // Add +/- 15% random jitter to base TTL to prevent Cache Avalanche
   const jitter = Math.floor(Math.random() * (baseTtl * 0.3)) - (baseTtl * 0.15);
   const finalTtl = Math.max(60, Math.floor(baseTtl + jitter));
 
   try {
-    // 4. Populate cache asynchronously without blocking caller
     await redis.set(key, JSON.stringify(freshData), 'EX', finalTtl);
   } catch (err) {
     console.warn('Redis Cache Write Warning:', err.message);
@@ -228,13 +211,11 @@ const lockKey = \`lock:\${key}\`;
 const acquired = await redis.set(lockKey, 'locked', 'NX', 'EX', 5);
 
 if (acquired) {
-  // Only THIS worker queries the database and refreshes the cache
   const data = await fetchFromDB();
   await redis.set(key, JSON.stringify(data), 'EX', 300);
   await redis.del(lockKey);
   return data;
 } else {
-  // Other workers sleep for 50ms and re-check cache
   await new Promise((res) => setTimeout(res, 50));
   return getCachedOrFetch(key, fetchFn, baseTtl);
 }</code></pre>
@@ -282,12 +263,11 @@ if (acquired) {
 <p>Server Components execute exclusively on the server. They have direct access to your database, filesystem, and microservices, and <strong>zero bytes of their component code are shipped to the user's browser</strong>:</p>
 
 <pre><code>// ArticleDetail.server.jsx
-// Notice: Async function component with direct database query!
 import db from '@/lib/db';
-import CommentSection from './CommentSection.client'; // Client interactive component
+import CommentSection from './CommentSection.client';
 
 export default async function ArticlePage({ params }) {
-  // Direct database query without any client REST API roundtrip!
+  // Direct database query right inside component!
   const article = await db.posts.findOne({ slug: params.slug });
 
   if (!article) {
@@ -303,7 +283,6 @@ export default async function ArticlePage({ params }) {
 
       &lt;div className="prose dark:prose-invert my-8" dangerouslySetInnerHTML={{ __html: article.content }} /&gt;
 
-      {/* Interactive client boundary for comments */}
       &lt;CommentSection postId={article._id.toString()} initialComments={article.comments} /&gt;
     &lt;/main&gt;
   );
@@ -317,7 +296,6 @@ import { useActionState } from 'react';
 import { submitCommentAction } from '@/actions/comments';
 
 export default function CommentForm({ postId }) {
-  // Native action hook handles pending state, server error return, and data automatically!
   const [state, formAction, isPending] = useActionState(submitCommentAction, { error: null });
 
   return (
@@ -345,33 +323,7 @@ export default function CommentForm({ postId }) {
   );
 }</code></pre>
 
-<h2>4. Instant Feedback with <code>useOptimistic</code></h2>
-<p>When a reader clicks "Like" or "Bookmark", waiting 500ms for a network roundtrip feels sluggish. React 19's <code>useOptimistic</code> lets you predict the successful outcome and update the UI instantly while the server request completes silently in the background:</p>
-
-<pre><code>'use client';
-import { useOptimistic } from 'react';
-
-export function LikeButton({ initialLikes, onLikeAction }) {
-  const [optimisticLikes, setOptimisticLikes] = useOptimistic(
-    initialLikes,
-    (current, update) =&gt; current + update
-  );
-
-  const handleClick = async () => {
-    // 1. Immediately increment counter on screen
-    setOptimisticLikes(1);
-    // 2. Perform background server mutation
-    await onLikeAction();
-  };
-
-  return (
-    &lt;button onClick={handleClick} className="flex items-center gap-1.5 text-xs font-bold"&gt;
-      ❤️ &lt;span&gt;{optimisticLikes}&lt;/span&gt;
-    &lt;/button&gt;
-  );
-}</code></pre>
-
-<h2>5. Summary of Key Principles</h2>
+<h2>4. Summary of Key Principles</h2>
 <ul>
   <li>Default to Server Components; only add <code>'use client'</code> at the leaf nodes where user events (clicks, typing) or browser APIs are required.</li>
   <li>Replace ad-hoc mutation fetch calls with native Server Actions and <code>useActionState</code>.</li>
@@ -432,11 +384,7 @@ db.posts.createIndex({ category: 1, createdAt: -1, views: 1 });</code></pre>
 db.posts.createIndex(
   { slug: 1 },
   { partialFilterExpression: { isPublished: true } }
-);</code></pre>
-
-<p>For temporary data such as user password reset tokens or unverified session keys, use <strong>TTL (Time-To-Live) Indexes</strong> to let MongoDB delete expired documents automatically without running manual cron jobs:</p>
-<pre><code>// Document automatically self-deletes 15 minutes after createdAt
-db.tokens.createIndex({ createdAt: 1 }, { expireAfterSeconds: 900 });</code></pre>`,
+);</code></pre>`,
   },
   {
     title: 'Zero Trust Security in Web Applications: From JWTs to Defense-in-Depth',
@@ -483,33 +431,15 @@ export const getSecureCookieOptions = () => ({
 
 export const sanitizeContent = (dirtyHtml) => {
   return DOMPurify.sanitize(dirtyHtml, {
-    // Explicit whitelist of allowed HTML elements
     ALLOWED_TAGS: [
       'h1', 'h2', 'h3', 'p', 'b', 'i', 'strong', 'em', 'code', 'pre',
       'ul', 'ol', 'li', 'blockquote', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td'
     ],
-    // Explicit whitelist of safe attributes
     ALLOWED_ATTR: ['src', 'alt', 'class', 'href', 'target', 'rel'],
-    // Strip all inline script tags, javascript: pseudo-protocols, and event handlers
     FORBID_TAGS: ['script', 'iframe', 'object', 'embed'],
     FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
   });
-};</code></pre>
-
-<h2>4. Defending Against Brute Force: Sliding-Window Rate Limiting</h2>
-<p>To defend against credential stuffing attacks, login endpoints must be gated behind sliding-window rate limiters:</p>
-<pre><code>import rateLimit from 'express-rate-limit';
-
-export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15-minute sliding window
-  max: 20,                   // Limit each IP to 20 login attempts per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message: 'Too many login attempts from this IP. Please try again after 15 minutes.',
-  },
-});</code></pre>`,
+};</code></pre>`,
   },
   {
     title: 'Eliminating the N+1 Query Problem in REST APIs: Schema Optimization & Batching',
@@ -528,16 +458,11 @@ export const authLimiter = rateLimit({
 </div>
 
 <h2>1. The Naive (Vulnerable) Code Pattern</h2>
-<p>Here is what the naive implementation looks like in standard Node.js/Mongoose controllers:</p>
-
 <pre><code>// ❌ NAIVE IMPLEMENTATION: 51 Database Roundtrips!
 export const getComments = async (req, res) => {
   const { postId } = req.params;
-
-  // Query 1: Fetch all comments for the post
   const comments = await Comment.find({ postId }).sort({ createdAt: -1 });
 
-  // Queries 2 through 51: Individual lookup for every comment!
   const enrichedComments = await Promise.all(
     comments.map(async (comment) =&gt; {
       const user = await User.findById(comment.userId); // 50 separate queries!
@@ -552,29 +477,26 @@ export const getComments = async (req, res) => {
   res.status(200).json(enrichedComments);
 };</code></pre>
 
-<h2>2. The SDE Solution: Batch Population with <code>$in</code> and In-Memory Hash Maps</h2>
-<p>Instead of querying users one-by-one inside a loop, extract all distinct user IDs and fetch them in a single batch query using MongoDB's <code>$in</code> operator. Then, map the results in memory using a fast <code>O(1)</code> lookup table:</p>
-
+<h2>2. The SDE Solution: Batch Population with <code>$in</code></h2>
 <pre><code>// ✅ OPTIMIZED ARCHITECTURE: Exactly 2 Database Queries regardless of comment count!
 export const getCommentsOptimized = async (req, res) => {
   const { postId } = req.params;
 
-  // Query 1: Fetch comments
   const comments = await Comment.find({ postId }).sort({ createdAt: -1 }).lean();
   if (!comments.length) return res.status(200).json([]);
 
-  // 1. Extract unique, distinct user IDs
+  // 1. Extract unique user IDs
   const userIds = [...new Set(comments.map((c) =&gt; c.userId.toString()))];
 
-  // Query 2: Single batch fetch for all authors matching the IDs
+  // Query 2: Single batch fetch for all matching authors
   const users = await User.find({ _id: { $in: userIds } })
     .select('username profilePicture')
     .lean();
 
-  // 2. Build an O(1) in-memory Hash Map
+  // 2. Build fast O(1) Map
   const userMap = new Map(users.map((u) =&gt; [u._id.toString(), u]));
 
-  // 3. Merge in memory with zero additional database calls
+  // 3. Merge in memory
   const enrichedComments = comments.map((comment) =&gt; ({
     ...comment,
     author: userMap.get(comment.userId.toString()) || {
@@ -609,11 +531,286 @@ export const getCommentsOptimized = async (req, res) => {
       <td class="p-3 text-emerald-500 font-mono font-bold">38 ms</td>
       <td class="p-3 text-emerald-600 font-semibold">21.5x faster</td>
     </tr>
+  </tbody>
+</table>`,
+  },
+  {
+    title: 'Building Resilient Event-Driven Microservices with Kafka & RabbitMQ',
+    category: 'architecture',
+    readTime: '10 min read',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Event-Driven', 'Kafka', 'RabbitMQ', 'Architecture', 'Microservices'],
+    authorName: 'Shivangi Singh',
+    authorAvatar: '/shivangi.jpg',
+    views: 3820,
+    numberOfLikes: 275,
+    content: `<p class="lead">In synchronous microservices architectures where Service A calls Service B via REST, a failure in any single downstream service ripples upstream, causing cascading system outages. In this architectural masterclass, we explore how <strong>Event-Driven Architectures (EDA)</strong> with Apache Kafka and RabbitMQ decouple distributed services, ensure zero message loss, and maintain high availability under petabyte-scale loads.</p>
+
+<div class="my-6 p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-sm">
+  📡 <strong>Core Principle:</strong> Publishers emit facts about things that occurred (e.g. <code>ArticlePublished</code> or <code>PaymentAuthorized</code>) and immediately resume their execution. Subscribers consume events at their own pace without impacting publisher throughput.
+</div>
+
+<h2>1. Kafka vs. RabbitMQ: Choosing the Right Message Backbone</h2>
+<table class="w-full text-left text-sm border my-6">
+  <thead>
+    <tr class="border-b bg-slate-100 dark:bg-slate-800">
+      <th class="p-3 font-bold">Criteria</th>
+      <th class="p-3 font-bold">RabbitMQ (AMQP)</th>
+      <th class="p-3 font-bold">Apache Kafka</th>
+    </tr>
+  </thead>
+  <tbody>
     <tr class="border-b">
-      <td class="p-3 font-medium">Database Pool Utilization</td>
-      <td class="p-3 font-mono">Saturated under load</td>
-      <td class="p-3 font-mono font-bold">Low, consistent</td>
-      <td class="p-3 text-emerald-600 font-semibold">Stable & Scalable</td>
+      <td class="p-3 font-semibold">Architecture Model</td>
+      <td class="p-3">Smart Broker, Dumb Consumer (Push Model)</td>
+      <td class="p-3">Dumb Broker, Smart Consumer (Pull Model)</td>
+    </tr>
+    <tr class="border-b">
+      <td class="p-3 font-semibold">Message Ordering</td>
+      <td class="p-3">Strict per-queue FIFO; can degrade under multi-consumer concurrency</td>
+      <td class="p-3">Guaranteed per-partition ordering using deterministic partition keys</td>
+    </tr>
+    <tr class="border-b">
+      <td class="p-3 font-semibold">Throughput Scale</td>
+      <td class="p-3">Tens of thousands messages/sec</td>
+      <td class="p-3">Millions of messages/sec (Zero-Copy OS pagecache disk writes)</td>
+    </tr>
+    <tr class="border-b">
+      <td class="p-3 font-semibold">Message Retention</td>
+      <td class="p-3">Deleted immediately upon consumer acknowledgement (ACK)</td>
+      <td class="p-3">Retained on disk for days/weeks; replayable on-demand</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. Designing Fault-Tolerant Dead Letter Queues (DLQ)</h2>
+<p>When an event fails to process due to corrupted data or a downstream database outage, retrying immediately in a tight loop blocks the consumer. We implement an exponential backoff DLQ pipeline:</p>
+
+<pre><code>// Production Kafka consumer with Dead Letter Queue routing
+import { Kafka } from 'kafkajs';
+
+const kafka = new Kafka({ clientId: 'analytics-worker', brokers: ['kafka:9092'] });
+const consumer = kafka.consumer({ groupId: 'analytics-group' });
+const producer = kafka.producer();
+
+export const runConsumer = async () => {
+  await consumer.connect();
+  await producer.connect();
+  await consumer.subscribe({ topic: 'user-events', fromBeginning: false });
+
+  await consumer.run({
+    eachMessage: async ({ topic, partition, message }) => {
+      let attempts = 0;
+      const maxRetries = 3;
+
+      while (attempts &lt; maxRetries) {
+        try {
+          const payload = JSON.parse(message.value.toString());
+          await processUserEvent(payload);
+          return; // Succeeded!
+        } catch (err) {
+          attempts++;
+          const delay = Math.pow(2, attempts) * 1000;
+          console.warn(\`Attempt \${attempts} failed. Retrying in \${delay}ms...\`);
+          await new Promise((res) => setTimeout(res, delay));
+        }
+      }
+
+      // If all retries fail, route to Dead Letter Queue (DLQ) for engineering analysis
+      await producer.send({
+        topic: 'user-events-dlq',
+        messages: [{
+          key: message.key,
+          value: message.value,
+          headers: { error: 'Exceeded max retries', failedAt: new Date().toISOString() },
+        }],
+      });
+      console.error('Routed poison-pill message to DLQ successfully.');
+    },
+  });
+};</code></pre>`,
+  },
+  {
+    title: 'Designing an Idempotent Payment & Webhook Architecture in Node.js',
+    category: 'architecture',
+    readTime: '9 min read',
+    image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=1200&q=80',
+    tags: ['FinTech', 'Architecture', 'Idempotency', 'Node.js', 'Webhooks'],
+    authorName: 'Shivangi Singh',
+    authorAvatar: '/shivangi.jpg',
+    views: 3910,
+    numberOfLikes: 290,
+    content: `<p class="lead">In payments and financial systems, duplicate requests are an unavoidable reality of distributed computing. When a user clicks "Submit Payment" on a mobile device and experiences a 5-second cellular drop, the client app or payment gateway automatically retries. Without an idempotent architecture, the customer is charged twice. In this guide, we architect a bulletproof idempotency framework using Redis distributed locks and transactional ledgers.</p>
+
+<div class="my-6 p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-sm">
+  💳 <strong>The Mathematical Definition of Idempotency:</strong> An operation is idempotent if <code>f(f(x)) = f(x)</code>. Executing an idempotent API endpoint 100 times produces the exact same side-effects and state transition as executing it once.
+</div>
+
+<h2>1. The Idempotency-Key Header Standard</h2>
+<p>Clients generate a unique UUID v4 token (e.g. <code>Idempotency-Key: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d</code>) and include it in the HTTP request headers. The server checks whether this key has already been processed before executing balance mutations.</p>
+
+<pre><code>// Production-grade Idempotency Middleware using Redis & Atomic Locking
+import Redis from 'ioredis';
+
+const redis = new Redis();
+
+export const idempotencyGuard = async (req, res, next) => {
+  const idempotencyKey = req.headers['idempotency-key'];
+  if (!idempotencyKey) return next();
+
+  const lockKey = \`lock:idempotency:\${idempotencyKey}\`;
+  const responseKey = \`response:idempotency:\${idempotencyKey}\`;
+
+  // 1. Check if an identical request was already finalized
+  const cachedResponse = await redis.get(responseKey);
+  if (cachedResponse) {
+    const { status, body } = JSON.parse(cachedResponse);
+    return res.status(status).json({ ...body, _idempotentReplay: true });
+  }
+
+  // 2. Acquire atomic distributed mutex lock (10s TTL) to prevent race conditions
+  const acquired = await redis.set(lockKey, 'in_progress', 'NX', 'EX', 10);
+  if (!acquired) {
+    return res.status(409).json({
+      success: false,
+      message: 'A transaction with this Idempotency-Key is currently being processed. Please wait.',
+    });
+  }
+
+  // 3. Intercept res.json to cache the response payload for future retries
+  const originalJson = res.json.bind(res);
+  res.json = (body) => {
+    // Cache the response for 24 hours
+    redis.set(responseKey, JSON.stringify({ status: res.statusCode, body }), 'EX', 86400);
+    redis.del(lockKey); // Release lock
+    return originalJson(body);
+  };
+
+  next();
+};</code></pre>
+
+<h2>2. Handling Webhook Retries Safely</h2>
+<p>Third-party payment gateways (Stripe, Razorpay) dispatch webhooks asynchronously and retry them repeatedly until receiving an HTTP <code>200 OK</code> response. We ensure safety by validating cryptographic webhook signatures (HMAC SHA-256) and recording every processed event ID in an audit ledger.</p>`,
+  },
+  {
+    title: 'Reliable Background Task Processing with BullMQ, Redis, and Worker Threads',
+    category: 'javascript',
+    readTime: '9 min read',
+    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Node.js', 'BullMQ', 'Worker Threads', 'Async', 'Queues'],
+    authorName: 'Shivangi Singh',
+    authorAvatar: '/shivangi.jpg',
+    views: 3410,
+    numberOfLikes: 245,
+    content: `<p class="lead">One of the most dangerous architectural anti-patterns in Node.js applications is running compute-intensive operations—such as video transcoding, image compression, PDF receipt generation, or massive CSV exports—directly inside synchronous Express request handlers. Because Node.js operates on a single main event loop, running heavy compute starves all incoming requests, causing severe latency spikes across the entire platform.</p>
+
+<div class="my-6 p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-sm">
+  ⏱️ <strong>Event Loop Starvation:</strong> If a route takes 2.5 seconds to generate an analytics report, no other HTTP request can be answered during that window. Every client connection freezes until the synchronous CPU task completes.
+</div>
+
+<h2>1. The Producer-Consumer Queue Architecture with BullMQ</h2>
+<p>By decoupling job submission from job execution using <strong>BullMQ</strong> backed by Redis streams, HTTP handlers respond to clients in under <strong>15ms</strong> with an HTTP <code>202 Accepted</code> status, delegating execution to dedicated background workers:</p>
+
+<pre><code>// 1. HTTP Producer Route
+import { Queue } from 'bullmq';
+
+const reportQueue = new Queue('reports', {
+  connection: { host: '127.0.0.1', port: 6379 },
+});
+
+export const requestReportHandler = async (req, res) => {
+  const { userId, dateRange } = req.body;
+
+  // Enqueue job with priority and automatic retry rules
+  const job = await reportQueue.add(
+    'generateMonthlyReport',
+    { userId, dateRange },
+    {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 2000 },
+      removeOnComplete: true,
+    }
+  );
+
+  res.status(202).json({
+    success: true,
+    message: 'Report request accepted and queued for processing.',
+    jobId: job.id,
+  });
+};</code></pre>
+
+<h2>2. Isolating Heavy Compute in Node.js Worker Threads</h2>
+<p>For truly CPU-bound calculations, instantiate isolated OS threads using <code>node:worker_threads</code> to ensure the background job execution itself never degrades event loop throughput.</p>`,
+  },
+  {
+    title: 'Next.js 15 Deep Dive: Partial Prerendering, Server Actions & Streaming SSR',
+    category: 'nextjs',
+    readTime: '9 min read',
+    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Next.js', 'React', 'SSR', 'Web Performance', 'Cloud'],
+    authorName: 'Shivangi Singh',
+    authorAvatar: '/shivangi.jpg',
+    views: 4120,
+    numberOfLikes: 334,
+    content: `<p class="lead">Historically, frontend web architecture forced developers into a difficult compromise: you could either generate fast, static HTML at build time (SSG) that could be cached on edge CDNs but couldn't show personalized user data, or you could render dynamically on every request (SSR), which supported real-time personalization but suffered from slower Time to First Byte (TTFB). Next.js 15 eliminates this trade-off entirely with <strong>Partial Prerendering (PPR)</strong>.</p>
+
+<div class="my-6 p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-sm">
+  🚀 <strong>What is Partial Prerendering?</strong> PPR delivers a static, pre-rendered HTML shell instantly from the CDN edge in under 20ms, while concurrently streaming dynamic, personalized components (such as user profiles and recommendations) over the same persistent HTTP connection using React Suspense.
+</div>
+
+<h2>1. Implementing Partial Prerendering with React Suspense</h2>
+<p>In Next.js 15, you declare dynamic regions by wrapping components in standard <code>Suspense</code> boundaries:</p>
+
+<pre><code>// app/page.jsx (Next.js 15 PPR Architecture)
+import { Suspense } from 'react';
+import StaticHeroBanner from '@/components/StaticHeroBanner';
+import DynamicUserFeed from '@/components/DynamicUserFeed';
+import FeedSkeleton from '@/components/FeedSkeleton';
+
+export const experimental_ppr = true; // Enable Partial Prerendering
+
+export default function HomePage() {
+  return (
+    &lt;main className="max-w-6xl mx-auto py-12 px-4"&gt;
+      {/* 1. Static Shell: Served immediately from edge CDN in &lt;25ms */}
+      &lt;StaticHeroBanner /&gt;
+
+      {/* 2. Dynamic Hole: Streams in over HTTP connection as data resolves */}
+      &lt;Suspense fallback={&lt;FeedSkeleton /&gt;}&gt;
+        &lt;DynamicUserFeed /&gt;
+      &lt;/Suspense&gt;
+    &lt;/main&gt;
+  );
+}</code></pre>
+
+<h2>2. Core Web Vitals Impact</h2>
+<table class="w-full text-left text-sm border my-6">
+  <thead>
+    <tr class="border-b bg-slate-100 dark:bg-slate-800">
+      <th class="p-3 font-bold">Web Vital Metric</th>
+      <th class="p-3 font-bold">Standard Dynamic SSR</th>
+      <th class="p-3 font-bold">Next.js 15 Partial Prerendering</th>
+      <th class="p-3 font-bold text-emerald-600">Improvement</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="border-b">
+      <td class="p-3 font-medium">Time to First Byte (TTFB)</td>
+      <td class="p-3 text-red-500 font-mono">420 ms</td>
+      <td class="p-3 text-emerald-500 font-mono font-bold">18 ms</td>
+      <td class="p-3 text-emerald-600 font-semibold">95.7% faster</td>
+    </tr>
+    <tr class="border-b">
+      <td class="p-3 font-medium">First Contentful Paint (FCP)</td>
+      <td class="p-3 text-red-500 font-mono">890 ms</td>
+      <td class="p-3 text-emerald-500 font-mono font-bold">95 ms</td>
+      <td class="p-3 text-emerald-600 font-semibold">Instant shell delivery</td>
+    </tr>
+    <tr class="border-b">
+      <td class="p-3 font-medium">Cumulative Layout Shift (CLS)</td>
+      <td class="p-3 font-mono">0.14 (Moderate)</td>
+      <td class="p-3 font-mono font-bold text-emerald-500">0.00 (Zero Shift)</td>
+      <td class="p-3 text-emerald-600 font-semibold">Perfect stability</td>
     </tr>
   </tbody>
 </table>`,
