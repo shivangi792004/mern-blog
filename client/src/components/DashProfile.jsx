@@ -116,6 +116,7 @@ export default function DashProfile() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
       const data = await res.json();
@@ -137,6 +138,7 @@ export default function DashProfile() {
       dispatch(deleteUserStart());
       const res = await fetch(`/api/user/delete/${currentUser._id}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       const data = await res.json();
       if (!res.ok) {
@@ -153,6 +155,7 @@ export default function DashProfile() {
     try {
       const res = await fetch('/api/user/signout', {
         method: 'POST',
+        credentials: 'include',
       });
       const data = await res.json();
       if (!res.ok) {
@@ -233,25 +236,30 @@ export default function DashProfile() {
           placeholder='password'
           onChange={handleChange}
         />
+        <TextInput
+          type='text'
+          id='bio'
+          placeholder='Professional bio or engineering title'
+          defaultValue={currentUser.bio || ''}
+          onChange={handleChange}
+        />
         <Button
           type='submit'
           gradientDuoTone='purpleToBlue'
           outline
           disabled={loading || imageFileUploading}
         >
-          {loading ? 'Loading...' : 'Update'}
+          {loading ? 'Loading...' : 'Update Profile'}
         </Button>
-        {currentUser.isAdmin && (
-          <Link to={'/create-post'}>
-            <Button
-              type='button'
-              gradientDuoTone='purpleToPink'
-              className='w-full'
-            >
-              Create a post
-            </Button>
-          </Link>
-        )}
+        <Link to={'/create-post'}>
+          <Button
+            type='button'
+            gradientDuoTone='purpleToPink'
+            className='w-full'
+          >
+            Create a publication
+          </Button>
+        </Link>
       </form>
       <div className='text-red-500 flex justify-between mt-5'>
         <span onClick={() => setShowModal(true)} className='cursor-pointer'>

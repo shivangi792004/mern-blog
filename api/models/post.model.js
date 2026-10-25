@@ -13,7 +13,6 @@ const postSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      unique: true,
     },
     image: {
       type: String,
@@ -28,6 +27,34 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    likes: {
+      type: [String],
+      default: [],
+    },
+    numberOfLikes: {
+      type: Number,
+      default: 0,
+    },
+    readTime: {
+      type: String,
+      default: '3 min read',
+    },
+    authorName: {
+      type: String,
+      default: 'Shivangi Singh',
+    },
+    authorAvatar: {
+      type: String,
+      default: '/shivangi.jpg',
+    },
+    tags: {
+      type: [String],
+      default: [],
     },
   },
   { timestamps: true }

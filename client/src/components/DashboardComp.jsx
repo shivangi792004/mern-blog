@@ -5,6 +5,8 @@ import {
   HiArrowNarrowUp,
   HiDocumentText,
   HiOutlineUserGroup,
+  HiEye,
+  HiHeart,
 } from 'react-icons/hi';
 import { Button, Table } from 'flowbite-react';
 import { Link } from 'react-router-dom';
@@ -20,15 +22,16 @@ export default function DashboardComp() {
   const [lastMonthPosts, setLastMonthPosts] = useState(0);
   const [lastMonthComments, setLastMonthComments] = useState(0);
   const { currentUser } = useSelector((state) => state.user);
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const res = await fetch('/api/user/getusers?limit=5');
         const data = await res.json();
         if (res.ok) {
-          setUsers(data.users);
-          setTotalUsers(data.totalUsers);
-          setLastMonthUsers(data.lastMonthUsers);
+          setUsers(data.users || []);
+          setTotalUsers(data.totalUsers || 0);
+          setLastMonthUsers(data.lastMonthUsers || 0);
         }
       } catch (error) {
         console.log(error.message);
@@ -36,12 +39,15 @@ export default function DashboardComp() {
     };
     const fetchPosts = async () => {
       try {
-        const res = await fetch('/api/post/getposts?limit=5');
+        const query = currentUser?.isAdmin
+          ? '/api/post/getposts?limit=5'
+          : `/api/post/getposts?userId=${currentUser?._id}&limit=5`;
+        const res = await fetch(query);
         const data = await res.json();
         if (res.ok) {
-          setPosts(data.posts);
-          setTotalPosts(data.totalPosts);
-          setLastMonthPosts(data.lastMonthPosts);
+          setPosts(data.posts || []);
+          setTotalPosts(data.totalPosts || 0);
+          setLastMonthPosts(data.lastMonthPosts || 0);
         }
       } catch (error) {
         console.log(error.message);
@@ -52,160 +58,223 @@ export default function DashboardComp() {
         const res = await fetch('/api/comment/getcomments?limit=5');
         const data = await res.json();
         if (res.ok) {
-          setComments(data.comments);
-          setTotalComments(data.totalComments);
-          setLastMonthComments(data.lastMonthComments);
+          setComments(data.comments || []);
+          setTotalComments(data.totalComments || 0);
+          setLastMonthComments(data.lastMonthComments || 0);
         }
       } catch (error) {
         console.log(error.message);
       }
     };
-    if (currentUser.isAdmin) {
-      fetchUsers();
+
+    if (currentUser) {
       fetchPosts();
-      fetchComments();
+      if (currentUser.isAdmin) {
+        fetchUsers();
+        fetchComments();
+      }
     }
   }, [currentUser]);
+
   return (
-    <div className='p-3 md:mx-auto'>
-      <div className='flex-wrap flex gap-4 justify-center'>
-        <div className='flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md'>
-          <div className='flex justify-between'>
-            <div className=''>
-              <h3 className='text-gray-500 text-md uppercase'>Total Users</h3>
-              <p className='text-2xl'>{totalUsers}</p>
+    <div className='p-4 w-full max-w-6xl mx-auto'>
+      <div className='mb-6'>
+        <h2 className='text-2xl font-bold text-slate-900 dark:text-white'>
+          {currentUser?.isAdmin ? 'Platform Overview & Telemetry' : 'Author Analytics & Publications'}
+        </h2>
+        <p className='text-xs text-slate-500'>
+          Real-time metrics, recent user activity, and publication health
+        </p>
+      </div>
+
+      {/* Metrics Row */}
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8'>
+        {currentUser?.isAdmin && (
+          <div className='p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <h3 className='text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider'>
+                  Registered Engineers
+                </h3>
+                <p className='text-3xl font-extrabold text-slate-900 dark:text-white mt-1'>
+                  {totalUsers}
+                </p>
+              </div>
+              <div className='w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 text-2xl'>
+                <HiOutlineUserGroup />
+              </div>
             </div>
-            <HiOutlineUserGroup className='bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg' />
+            <div className='flex items-center gap-1.5 text-xs text-slate-500 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800'>
+              <span className='text-emerald-500 font-bold flex items-center'>
+                <HiArrowNarrowUp /> +{lastMonthUsers}
+              </span>
+              <span>new accounts this month</span>
+            </div>
           </div>
-          <div className='flex  gap-2 text-sm'>
-            <span className='text-green-500 flex items-center'>
-              <HiArrowNarrowUp />
-              {lastMonthUsers}
-            </span>
-            <div className='text-gray-500'>Last month</div>
+        )}
+
+        {currentUser?.isAdmin && (
+          <div className='p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <h3 className='text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider'>
+                  Community Discussions
+                </h3>
+                <p className='text-3xl font-extrabold text-slate-900 dark:text-white mt-1'>
+                  {totalComments}
+                </p>
+              </div>
+              <div className='w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/50 flex items-center justify-center text-purple-600 text-2xl'>
+                <HiAnnotation />
+              </div>
+            </div>
+            <div className='flex items-center gap-1.5 text-xs text-slate-500 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800'>
+              <span className='text-emerald-500 font-bold flex items-center'>
+                <HiArrowNarrowUp /> +{lastMonthComments}
+              </span>
+              <span>comments posted this month</span>
+            </div>
           </div>
-        </div>
-        <div className='flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md'>
-          <div className='flex justify-between'>
-            <div className=''>
-              <h3 className='text-gray-500 text-md uppercase'>
-                Total Comments
+        )}
+
+        <div className='p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <h3 className='text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider'>
+                {currentUser?.isAdmin ? 'Technical Publications' : 'My Publications'}
               </h3>
-              <p className='text-2xl'>{totalComments}</p>
+              <p className='text-3xl font-extrabold text-slate-900 dark:text-white mt-1'>
+                {totalPosts}
+              </p>
             </div>
-            <HiAnnotation className='bg-indigo-600  text-white rounded-full text-5xl p-3 shadow-lg' />
-          </div>
-          <div className='flex  gap-2 text-sm'>
-            <span className='text-green-500 flex items-center'>
-              <HiArrowNarrowUp />
-              {lastMonthComments}
-            </span>
-            <div className='text-gray-500'>Last month</div>
-          </div>
-        </div>
-        <div className='flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md'>
-          <div className='flex justify-between'>
-            <div className=''>
-              <h3 className='text-gray-500 text-md uppercase'>Total Posts</h3>
-              <p className='text-2xl'>{totalPosts}</p>
+            <div className='w-12 h-12 rounded-2xl bg-pink-50 dark:bg-pink-950/50 flex items-center justify-center text-pink-600 text-2xl'>
+              <HiDocumentText />
             </div>
-            <HiDocumentText className='bg-lime-600  text-white rounded-full text-5xl p-3 shadow-lg' />
           </div>
-          <div className='flex  gap-2 text-sm'>
-            <span className='text-green-500 flex items-center'>
-              <HiArrowNarrowUp />
-              {lastMonthPosts}
+          <div className='flex items-center gap-1.5 text-xs text-slate-500 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800'>
+            <span className='text-emerald-500 font-bold flex items-center'>
+              <HiArrowNarrowUp /> +{lastMonthPosts}
             </span>
-            <div className='text-gray-500'>Last month</div>
+            <span>published recently</span>
           </div>
         </div>
       </div>
-      <div className='flex flex-wrap gap-4 py-3 mx-auto justify-center'>
-        <div className='flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800'>
-          <div className='flex justify-between  p-3 text-sm font-semibold'>
-            <h1 className='text-center p-2'>Recent users</h1>
-            <Button outline gradientDuoTone='purpleToPink'>
-              <Link to={'/dashboard?tab=users'}>See all</Link>
-            </Button>
+
+      {/* Tables Section */}
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+        {/* Recent Posts Table */}
+        <div className='p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm'>
+          <div className='flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800'>
+            <h3 className='font-bold text-base text-slate-900 dark:text-white'>Recent Publications</h3>
+            <Link to='/dashboard?tab=posts'>
+              <Button size='xs' color='gray' outline>
+                See All
+              </Button>
+            </Link>
           </div>
           <Table hoverable>
             <Table.Head>
-              <Table.HeadCell>User image</Table.HeadCell>
-              <Table.HeadCell>Username</Table.HeadCell>
-            </Table.Head>
-            {users &&
-              users.map((user) => (
-                <Table.Body key={user._id} className='divide-y'>
-                  <Table.Row className='bg-white dark:border-gray-700 dark:bg-gray-800'>
-                    <Table.Cell>
-                      <img
-                        src={user.profilePicture}
-                        alt='user'
-                        className='w-10 h-10 rounded-full bg-gray-500'
-                      />
-                    </Table.Cell>
-                    <Table.Cell>{user.username}</Table.Cell>
-                  </Table.Row>
-                </Table.Body>
-              ))}
-          </Table>
-        </div>
-        <div className='flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800'>
-          <div className='flex justify-between  p-3 text-sm font-semibold'>
-            <h1 className='text-center p-2'>Recent comments</h1>
-            <Button outline gradientDuoTone='purpleToPink'>
-              <Link to={'/dashboard?tab=comments'}>See all</Link>
-            </Button>
-          </div>
-          <Table hoverable>
-            <Table.Head>
-              <Table.HeadCell>Comment content</Table.HeadCell>
-              <Table.HeadCell>Likes</Table.HeadCell>
-            </Table.Head>
-            {comments &&
-              comments.map((comment) => (
-                <Table.Body key={comment._id} className='divide-y'>
-                  <Table.Row className='bg-white dark:border-gray-700 dark:bg-gray-800'>
-                    <Table.Cell className='w-96'>
-                        <p className='line-clamp-2'>{comment.content}</p>
-                    </Table.Cell>
-                    <Table.Cell>{comment.numberOfLikes}</Table.Cell>
-                  </Table.Row>
-                </Table.Body>
-              ))}
-          </Table>
-        </div>
-        <div className='flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800'>
-          <div className='flex justify-between  p-3 text-sm font-semibold'>
-            <h1 className='text-center p-2'>Recent posts</h1>
-            <Button outline gradientDuoTone='purpleToPink'>
-              <Link to={'/dashboard?tab=posts'}>See all</Link>
-            </Button>
-          </div>
-          <Table hoverable>
-            <Table.Head>
-              <Table.HeadCell>Post image</Table.HeadCell>
-              <Table.HeadCell>Post Title</Table.HeadCell>
+              <Table.HeadCell>Cover</Table.HeadCell>
+              <Table.HeadCell>Title</Table.HeadCell>
               <Table.HeadCell>Category</Table.HeadCell>
             </Table.Head>
-            {posts &&
-              posts.map((post) => (
-                <Table.Body key={post._id} className='divide-y'>
-                  <Table.Row className='bg-white dark:border-gray-700 dark:bg-gray-800'>
+            <Table.Body className='divide-y'>
+              {posts &&
+                posts.map((post) => (
+                  <Table.Row key={post._id} className='bg-white dark:border-slate-800 dark:bg-slate-900'>
                     <Table.Cell>
                       <img
                         src={post.image}
-                        alt='user'
-                        className='w-14 h-10 rounded-md bg-gray-500'
+                        alt={post.title}
+                        className='w-12 h-8 rounded-md object-cover bg-slate-200'
                       />
                     </Table.Cell>
-                    <Table.Cell className='w-96'>{post.title}</Table.Cell>
-                    <Table.Cell className='w-5'>{post.category}</Table.Cell>
+                    <Table.Cell className='max-w-[200px]'>
+                      <Link
+                        to={`/post/${post.slug}`}
+                        className='font-semibold text-xs text-slate-900 dark:text-white line-clamp-1 hover:text-indigo-600'
+                      >
+                        {post.title}
+                      </Link>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className='text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 capitalize'>
+                        {post.category}
+                      </span>
+                    </Table.Cell>
                   </Table.Row>
-                </Table.Body>
-              ))}
+                ))}
+            </Table.Body>
           </Table>
         </div>
+
+        {/* Recent Users or Community Table */}
+        {currentUser?.isAdmin ? (
+          <div className='p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm'>
+            <div className='flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800'>
+              <h3 className='font-bold text-base text-slate-900 dark:text-white'>Recent Users</h3>
+              <Link to='/dashboard?tab=users'>
+                <Button size='xs' color='gray' outline>
+                  See All
+                </Button>
+              </Link>
+            </div>
+            <Table hoverable>
+              <Table.Head>
+                <Table.HeadCell>Avatar</Table.HeadCell>
+                <Table.HeadCell>Username</Table.HeadCell>
+                <Table.HeadCell>Role</Table.HeadCell>
+              </Table.Head>
+              <Table.Body className='divide-y'>
+                {users &&
+                  users.map((user) => (
+                    <Table.Row key={user._id} className='bg-white dark:border-slate-800 dark:bg-slate-900'>
+                      <Table.Cell>
+                        <img
+                          src={user.profilePicture}
+                          alt={user.username}
+                          className='w-8 h-8 rounded-full object-cover bg-slate-200'
+                        />
+                      </Table.Cell>
+                      <Table.Cell className='font-semibold text-xs text-slate-800 dark:text-slate-200'>
+                        @{user.username}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          user.isAdmin
+                            ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
+                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                        }`}>
+                          {user.isAdmin ? 'Admin' : 'Author'}
+                        </span>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+              </Table.Body>
+            </Table>
+          </div>
+        ) : (
+          <div className='p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-slate-900 dark:to-slate-800 flex flex-col justify-between'>
+            <div>
+              <h3 className='font-bold text-base text-slate-900 dark:text-white mb-2'>
+                Developer Author Guide
+              </h3>
+              <p className='text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4'>
+                As a DevPulse author, you can draft technical articles, embed code snippets with JetBrains Mono syntax styling, and tag engineering categories like Microservices, React 19, or Redis.
+              </p>
+              <ul className='space-y-1.5 text-xs text-slate-600 dark:text-slate-300'>
+                <li>&bull; Include code blocks using markdown pre tags</li>
+                <li>&bull; Reading times and unique slugs are generated automatically</li>
+                <li>&bull; Content is protected by client-side DOMPurify sanitization</li>
+              </ul>
+            </div>
+            <Link to='/create-post' className='mt-6'>
+              <Button size='sm' gradientDuoTone='purpleToPink' className='w-full font-semibold'>
+                Write New Publication
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

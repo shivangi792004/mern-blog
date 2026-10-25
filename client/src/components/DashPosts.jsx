@@ -2,8 +2,7 @@ import { Modal, Table, Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { HiOutlineExclamationCircle } from 'react-icons/hi';
-import { set } from 'mongoose';
+import { HiOutlineExclamationCircle, HiPlus } from 'react-icons/hi';
 
 export default function DashPosts() {
   const { currentUser } = useSelector((state) => state.user);
@@ -11,13 +10,17 @@ export default function DashPosts() {
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [postIdToDelete, setPostIdToDelete] = useState('');
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const res = await fetch(`/api/post/getposts?userId=${currentUser._id}`);
+        const query = currentUser.isAdmin
+          ? '/api/post/getposts'
+          : `/api/post/getposts?userId=${currentUser._id}`;
+        const res = await fetch(query);
         const data = await res.json();
         if (res.ok) {
-          setUserPosts(data.posts);
+          setUserPosts(data.posts || []);
           if (data.posts.length < 9) {
             setShowMore(false);
           }
@@ -26,17 +29,18 @@ export default function DashPosts() {
         console.log(error.message);
       }
     };
-    if (currentUser.isAdmin) {
+    if (currentUser) {
       fetchPosts();
     }
-  }, [currentUser._id]);
+  }, [currentUser]);
 
   const handleShowMore = async () => {
     const startIndex = userPosts.length;
     try {
-      const res = await fetch(
-        `/api/post/getposts?userId=${currentUser._id}&startIndex=${startIndex}`
-      );
+      const baseQuery = currentUser.isAdmin
+        ? `/api/post/getposts?startIndex=${startIndex}`
+        : `/api/post/getposts?userId=${currentUser._id}&startIndex=${startIndex}`;
+      const res = await fetch(baseQuery);
       const data = await res.json();
       if (res.ok) {
         setUserPosts((prev) => [...prev, ...data.posts]);
@@ -56,6 +60,7 @@ export default function DashPosts() {
         `/api/post/deletepost/${postIdToDelete}/${currentUser._id}`,
         {
           method: 'DELETE',
+          credentials: 'include',
         }
       );
       const data = await res.json();
@@ -72,24 +77,42 @@ export default function DashPosts() {
   };
 
   return (
-    <div className='table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500'>
-      {currentUser.isAdmin && userPosts.length > 0 ? (
+    <div className='table-auto overflow-x-scroll md:mx-auto p-4 w-full max-w-5xl scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500'>
+      <div className='flex items-center justify-between mb-4'>
+        <div>
+          <h2 className='text-2xl font-bold text-slate-900 dark:text-white'>
+            {currentUser.isAdmin ? 'All Publications' : 'My Publications'}
+          </h2>
+          <p className='text-xs text-slate-500'>
+            Manage and edit published articles
+          </p>
+        </div>
+        <Link to='/create-post'>
+          <Button gradientDuoTone='purpleToPink' size='sm'>
+            <HiPlus className='mr-1' /> Create Post
+          </Button>
+        </Link>
+      </div>
+
+      {userPosts.length > 0 ? (
         <>
-          <Table hoverable className='shadow-md'>
+          <Table hoverable className='shadow-sm rounded-2xl overflow-hidden'>
             <Table.Head>
-              <Table.HeadCell>Date updated</Table.HeadCell>
-              <Table.HeadCell>Post image</Table.HeadCell>
-              <Table.HeadCell>Post title</Table.HeadCell>
+              <Table.HeadCell>Date</Table.HeadCell>
+              <Table.HeadCell>Image</Table.HeadCell>
+              <Table.HeadCell>Title</Table.HeadCell>
               <Table.HeadCell>Category</Table.HeadCell>
+              <Table.HeadCell>Views</Table.HeadCell>
               <Table.HeadCell>Delete</Table.HeadCell>
-              <Table.HeadCell>
-                <span>Edit</span>
-              </Table.HeadCell>
+              <Table.HeadCell>Edit</Table.HeadCell>
             </Table.Head>
-            {userPosts.map((post) => (
-              <Table.Body className='divide-y'>
-                <Table.Row className='bg-white dark:border-gray-700 dark:bg-gray-800'>
-                  <Table.Cell>
+            <Table.Body className='divide-y'>
+              {userPosts.map((post) => (
+                <Table.Row
+                  key={post._id}
+                  className='bg-white dark:border-slate-800 dark:bg-slate-900'
+                >
+                  <Table.Cell className='text-xs'>
                     {new Date(post.updatedAt).toLocaleDateString()}
                   </Table.Cell>
                   <Table.Cell>
@@ -97,54 +120,74 @@ export default function DashPosts() {
                       <img
                         src={post.image}
                         alt={post.title}
-                        className='w-20 h-10 object-cover bg-gray-500'
+                        className='w-16 h-10 object-cover rounded-lg bg-slate-200'
                       />
                     </Link>
                   </Table.Cell>
                   <Table.Cell>
                     <Link
-                      className='font-medium text-gray-900 dark:text-white'
+                      className='font-semibold text-slate-900 dark:text-white line-clamp-1 hover:text-indigo-600'
                       to={`/post/${post.slug}`}
                     >
                       {post.title}
                     </Link>
                   </Table.Cell>
-                  <Table.Cell>{post.category}</Table.Cell>
+                  <Table.Cell>
+                    <span className='px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 capitalize'>
+                      {post.category}
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell className='text-xs text-slate-500'>
+                    {post.views || 0}
+                  </Table.Cell>
                   <Table.Cell>
                     <span
                       onClick={() => {
                         setShowModal(true);
                         setPostIdToDelete(post._id);
                       }}
-                      className='font-medium text-red-500 hover:underline cursor-pointer'
+                      className='font-medium text-red-500 hover:underline cursor-pointer text-xs'
                     >
                       Delete
                     </span>
                   </Table.Cell>
                   <Table.Cell>
                     <Link
-                      className='text-teal-500 hover:underline'
+                      className='text-indigo-600 dark:text-indigo-400 font-medium hover:underline text-xs'
                       to={`/update-post/${post._id}`}
                     >
-                      <span>Edit</span>
+                      Edit
                     </Link>
                   </Table.Cell>
                 </Table.Row>
-              </Table.Body>
-            ))}
+              ))}
+            </Table.Body>
           </Table>
           {showMore && (
             <button
               onClick={handleShowMore}
-              className='w-full text-teal-500 self-center text-sm py-7'
+              className='w-full text-indigo-600 dark:text-indigo-400 self-center text-sm py-5 hover:underline font-medium'
             >
-              Show more
+              Show more articles
             </button>
           )}
         </>
       ) : (
-        <p>You have no posts yet!</p>
+        <div className='text-center py-12 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8'>
+          <p className='text-base font-semibold text-slate-700 dark:text-slate-300'>
+            No posts found!
+          </p>
+          <p className='text-xs text-slate-500 mt-1 mb-4'>
+            Write your first engineering article or architecture guide today.
+          </p>
+          <Link to='/create-post'>
+            <Button gradientDuoTone='purpleToPink' size='sm' className='mx-auto'>
+              Create a Post
+            </Button>
+          </Link>
+        </div>
       )}
+
       <Modal
         show={showModal}
         onClose={() => setShowModal(false)}
@@ -154,16 +197,19 @@ export default function DashPosts() {
         <Modal.Header />
         <Modal.Body>
           <div className='text-center'>
-            <HiOutlineExclamationCircle className='h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto' />
-            <h3 className='mb-5 text-lg text-gray-500 dark:text-gray-400'>
-              Are you sure you want to delete this post?
+            <HiOutlineExclamationCircle className='h-14 w-14 text-rose-500 mb-4 mx-auto' />
+            <h3 className='mb-5 text-lg font-semibold text-slate-800 dark:text-slate-200'>
+              Are you sure you want to delete this publication?
             </h3>
+            <p className='text-xs text-slate-500 mb-6'>
+              This action cannot be undone. The article and its comments will be permanently removed.
+            </p>
             <div className='flex justify-center gap-4'>
               <Button color='failure' onClick={handleDeletePost}>
-                Yes, I'm sure
+                Yes, delete it
               </Button>
               <Button color='gray' onClick={() => setShowModal(false)}>
-                No, cancel
+                Cancel
               </Button>
             </div>
           </div>

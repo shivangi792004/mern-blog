@@ -84,9 +84,9 @@ export default function DashComments() {
               <Table.HeadCell>UserId</Table.HeadCell>
               <Table.HeadCell>Delete</Table.HeadCell>
             </Table.Head>
-            {comments.map((comment) => (
-              <Table.Body className='divide-y' key={comment._id}>
-                <Table.Row className='bg-white dark:border-gray-700 dark:bg-gray-800'>
+            <Table.Body className='divide-y'>
+              {comments.map((comment) => (
+                <Table.Row key={comment._id} className='bg-white dark:border-gray-700 dark:bg-gray-800'>
                   <Table.Cell>
                     {new Date(comment.updatedAt).toLocaleDateString()}
                   </Table.Cell>
@@ -106,8 +106,8 @@ export default function DashComments() {
                     </span>
                   </Table.Cell>
                 </Table.Row>
-              </Table.Body>
-            ))}
+              ))}
+            </Table.Body>
           </Table>
           {showMore && (
             <button

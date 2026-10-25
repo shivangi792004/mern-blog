@@ -25,6 +25,16 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    bio: {
+      type: String,
+      default: 'Passionate software developer & technical reader.',
+    },
+    bookmarks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post',
+      },
+    ],
   },
   { timestamps: true }
 );

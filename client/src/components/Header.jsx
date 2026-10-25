@@ -1,10 +1,11 @@
 import { Avatar, Button, Dropdown, Navbar, TextInput } from 'flowbite-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AiOutlineSearch } from 'react-icons/ai';
-import { FaMoon, FaSun } from 'react-icons/fa';
+import { FaMoon, FaSun, FaBookmark, FaPen } from 'react-icons/fa';
+import { HiLightningBolt } from 'react-icons/hi';
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from '../redux/theme/themeSlice';
-import { signoutSuccess } from '../redux/user/userSlice';
+import { signoutSuccess, signInSuccess } from '../redux/user/userSlice';
 import { useEffect, useState } from 'react';
 
 export default function Header() {
@@ -40,6 +41,23 @@ export default function Header() {
     }
   };
 
+  const handleQuickDemo = async () => {
+    try {
+      const res = await fetch('/api/auth/demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'admin' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        dispatch(signInSuccess(data));
+        navigate('/dashboard?tab=dash');
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const urlParams = new URLSearchParams(location.search);
@@ -48,89 +66,141 @@ export default function Header() {
     navigate(`/search?${searchQuery}`);
   };
 
-  // Fallback for profile picture
   const getProfilePicture = () => {
     if (currentUser && currentUser.profilePicture) {
       return currentUser.profilePicture;
     }
-    return 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
+    return '/shivangi.jpg';
   };
 
   return (
-    <Navbar className='border-b-2'>
+    <Navbar className='sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800/80 transition-colors duration-200'>
       <Link
         to='/'
-        className='self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white'
+        className='self-center flex items-center gap-2 whitespace-nowrap text-lg sm:text-2xl font-bold dark:text-white tracking-tight'
       >
-        <span className='px-2 py-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg text-white'>
-          Shivangi's
+        <span className='w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/25'>
+          ⚡
         </span>
-        Blog
+        <span className='bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent font-extrabold'>
+          Personal Blog
+        </span>
       </Link>
-      <form onSubmit={handleSubmit}>
+
+      <form onSubmit={handleSubmit} className='relative hidden lg:inline'>
         <TextInput
           type='text'
-          placeholder='Search...'
+          placeholder='Search articles, topics, architecture...'
           rightIcon={AiOutlineSearch}
-          className='hidden lg:inline'
+          className='w-72 xl:w-80'
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </form>
-      <Button className='w-12 h-10 lg:hidden' color='gray' pill>
-        <AiOutlineSearch />
-      </Button>
-      <div className='flex gap-2 md:order-2'>
+
+      <div className='flex items-center gap-2 md:order-2'>
         <Button
-          className='w-12 h-10 hidden sm:inline'
+          className='w-10 h-10 flex items-center justify-center rounded-xl'
           color='gray'
-          pill
           onClick={() => dispatch(toggleTheme())}
+          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
         >
-          {theme === 'light' ? <FaSun /> : <FaMoon />}
+          {theme === 'light' ? (
+            <FaMoon className='text-slate-700' />
+          ) : (
+            <FaSun className='text-amber-400' />
+          )}
         </Button>
+
         {currentUser ? (
-          <Dropdown
-            arrowIcon={false}
-            inline
-            label={
-              <Avatar 
-                alt='user' 
-                img={getProfilePicture()} 
-                rounded 
-              />
-            }
-          >
-            <Dropdown.Header>
-              <span className='block text-sm'>@{currentUser.username}</span>
-              <span className='block text-sm font-medium truncate'>
-                {currentUser.email}
-              </span>
-            </Dropdown.Header>
-            <Link to={'/dashboard?tab=profile'}>
-              <Dropdown.Item>Profile</Dropdown.Item>
+          <div className='flex items-center gap-2'>
+            <Link to='/create-post' className='hidden sm:inline'>
+              <Button
+                size='sm'
+                gradientDuoTone='purpleToPink'
+                className='font-medium'
+              >
+                <FaPen className='mr-1.5 h-3.5 w-3.5' /> Write
+              </Button>
             </Link>
-            <Dropdown.Divider />
-            <Dropdown.Item onClick={handleSignout}>Sign out</Dropdown.Item>
-          </Dropdown>
+
+            <Dropdown
+              arrowIcon={false}
+              inline
+              label={
+                <Avatar
+                  alt='user'
+                  img={getProfilePicture()}
+                  rounded
+                  className='ring-2 ring-indigo-500/30'
+                />
+              }
+            >
+              <Dropdown.Header>
+                <span className='block text-sm font-semibold'>@{currentUser.username}</span>
+                <span className='block text-xs text-slate-500 truncate'>
+                  {currentUser.email}
+                </span>
+                {currentUser.isAdmin && (
+                  <span className='inline-block mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'>
+                    Admin
+                  </span>
+                )}
+              </Dropdown.Header>
+              <Link to={'/dashboard?tab=profile'}>
+                <Dropdown.Item>Profile Settings</Dropdown.Item>
+              </Link>
+              <Link to={'/dashboard?tab=dash'}>
+                <Dropdown.Item>Dashboard</Dropdown.Item>
+              </Link>
+              <Link to={'/dashboard?tab=posts'}>
+                <Dropdown.Item>Manage Posts</Dropdown.Item>
+              </Link>
+              <Link to={'/create-post'}>
+                <Dropdown.Item>Create New Post</Dropdown.Item>
+              </Link>
+              <Link to={'/dashboard?tab=bookmarks'}>
+                <Dropdown.Item icon={FaBookmark}>Saved Articles</Dropdown.Item>
+              </Link>
+              <Dropdown.Divider />
+              <Dropdown.Item onClick={handleSignout} className='text-red-600 dark:text-red-400'>
+                Sign out
+              </Dropdown.Item>
+            </Dropdown>
+          </div>
         ) : (
-          <Link to='/sign-in'>
-            <Button gradientDuoTone='purpleToBlue' outline>
-              Sign In
+          <div className='flex items-center gap-2'>
+            <Button
+              size='sm'
+              color='gray'
+              onClick={handleQuickDemo}
+              className='hidden sm:flex items-center text-xs'
+              title='Instant demo login for reviewers'
+            >
+              <HiLightningBolt className='text-amber-500 mr-1 text-sm' /> Demo Login
             </Button>
-          </Link>
+            <Link to='/sign-in'>
+              <Button size='sm' gradientDuoTone='purpleToBlue' outline>
+                Sign In
+              </Button>
+            </Link>
+          </div>
         )}
         <Navbar.Toggle />
       </div>
+
       <Navbar.Collapse>
         <Navbar.Link active={path === '/'} as={'div'}>
-          <Link to='/'>Home</Link>
+          <Link to='/' className='font-medium'>Home</Link>
         </Navbar.Link>
-        <Navbar.Link active={path === '/about'} as={'div'}>
-          <Link to='/about'>About</Link>
+        <Navbar.Link active={path === '/search'} as={'div'}>
+          <Link to='/search' className='font-medium'>Explore Articles</Link>
         </Navbar.Link>
         <Navbar.Link active={path === '/projects'} as={'div'}>
-          <Link to='/projects'>Projects</Link>
+          <Link to='/projects' className='font-medium'>Architecture Projects</Link>
+        </Navbar.Link>
+        <Navbar.Link active={path === '/about'} as={'div'}>
+          <Link to='/about' className='font-medium'>About Shivangi</Link>
         </Navbar.Link>
       </Navbar.Collapse>
     </Navbar>

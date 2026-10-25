@@ -1,71 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  height: 100vh;
+@layer base {
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased min-h-screen selection:bg-indigo-500 selection:text-white transition-colors duration-200;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+  }
 }
 
+/* Glassmorphism Accents */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+/* Glowing Border Gradient */
+.glow-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+}
+
+.glow-gradient-subtle {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 50%, rgba(236, 72, 153, 0.15) 100%);
+}
+
+/* Editor Styling */
 .ql-editor {
   font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+/* Post Content Typography & Code Blocks */
+.post-content {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #334155;
+}
+
+.dark .post-content {
+  color: #cbd5e1;
 }
 
 .post-content p {
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .post-content h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  font-family: sans-serif;
-  margin: 1.5rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 2.25rem 0 1rem 0;
+  color: #0f172a;
 }
+
+.dark .post-content h1 {
+  color: #f8fafc;
+}
+
 .post-content h2 {
-  font-size: 1.4rem;
-  font-family: sans-serif;
-  margin: 1.5rem 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 2rem 0 0.85rem 0;
+  color: #1e293b;
+}
+
+.dark .post-content h2 {
+  color: #f1f5f9;
+}
+
+.post-content h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem 0;
+  color: #334155;
+}
+
+.dark .post-content h3 {
+  color: #e2e8f0;
+}
+
+.post-content ul, .post-content ol {
+  margin: 1.25rem 0;
+  padding-left: 1.5rem;
 }
 
 .post-content ul li {
-  margin: 1.15rem 0;
-  margin-left: 1.3rem;
-  list-style-type: circle;
-}
-
-.post-content ol li {
-  margin: 1.15rem 0;
-  margin-left: 1.3rem;
-  list-style-type: decimal;
-}
-
-.post-content a {
-  /* light blue */
-  color: rgb(73, 149, 199);
-  text-decoration: none;
-}
-
-.post-content a:hover {
-  text-decoration: underline;
-}
-
-.post-content pre {
-  background-color: rgb(30, 41, 59);
-  border: 1px solid rgb(61, 69, 83);
-  color: rgb(232, 231, 231);
-  white-space: pre-wrap;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
+  list-style-type: disc;
   margin-bottom: 0.5rem;
 }
 
+.post-content ol li {
+  list-style-type: decimal;
+  margin-bottom: 0.5rem;
+}
+
+.post-content a {
+  color: #6366f1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.post-content a:hover {
+  color: #4f46e5;
+}
+
+.post-content blockquote {
+  border-left: 4px solid #6366f1;
+  padding: 0.75rem 1.25rem;
+  margin: 1.5rem 0;
+  background: rgba(99, 102, 241, 0.05);
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: italic;
+  color: #475569;
+}
+
+.dark .post-content blockquote {
+  background: rgba(99, 102, 241, 0.1);
+  color: #94a3b8;
+}
+
+.post-content pre {
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  color: #e2e8f0;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 .post-content code {
-  background-color: rgb(236, 236, 236);
-  padding: 0.25rem;
-  border-radius: 0.25rem;
-  font-size: 0.9rem;
+  background-color: #f1f5f9;
+  color: #6366f1;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.35rem;
+  font-size: 0.9em;
+  font-weight: 500;
 }
 
 .dark .post-content code {
-  background-color: rgb(30, 41, 59);
-  border: 1px solid rgb(61, 69, 83);
+  background-color: #1e293b;
+  color: #818cf8;
+}
+
+.post-content pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Reading Progress Bar */
+.reading-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+  z-index: 9999;
+  transition: width 0.1s ease-out;
 }

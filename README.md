@@ -1,161 +1,216 @@
-# 📝 MERN Blog – Full Stack Blogging Platform
+# ⚡ Personal Blog — Modern Full-Stack MERN Engineering Platform
 
-A full-stack **MERN (MongoDB, Express, React, Node.js)** project where users can create and manage blog posts with secure **JWT Authentication**.  
-Now enhanced with **Protected Routes** and a **modern responsive UI**.
+[![MERN Stack](https://img.shields.io/badge/Stack-MERN-6366f1.svg?style=for-the-badge)](https://github.com/shivangi792004)
+[![Node Version](https://img.shields.io/badge/Node-v24.16.0-green.svg?style=for-the-badge)](https://nodejs.org)
+[![React Version](https://img.shields.io/badge/React-18.2.0-blue.svg?style=for-the-badge)](https://react.dev)
+[![Database](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248.svg?style=for-the-badge)](https://www.mongodb.com)
+[![Security](https://img.shields.io/badge/Security-DOMPurify%20%7C%20RateLimit%20%7C%20JWT-purple.svg?style=for-the-badge)](https://github.com/shivangi792004)
 
----
-
-## 🚀 Live Demo
-🔗 **Deployed App:** [https://mern-blog-jn6u.onrender.com](https://mern-blog-jn6u.onrender.com)
-
-<img width="1903" height="875" alt="image" src="https://github.com/user-attachments/assets/1165d578-7414-46b5-8ea8-4e96e45b5632" />
+**Personal Blog** is a production-grade, high-performance technical engineering platform architected and built by **Shivangi Singh** (B.Tech CSE '26, Lovely Professional University). Built to showcase tier-1 Software Development Engineer (SDE) principles, it incorporates clean MERN architecture, zero-N+1 query optimizations, defense-in-depth security (DOMPurify XSS scrubbing, sliding-window rate-limiting, and HttpOnly cookies), and a fluid glassmorphic UI.
 
 ---
 
-## 📖 Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Installation](#installation)
-- [Environment Variables](#environment-variables)
-- [Project Structure](#project-structure)
-- [Deployment](#deployment)
-- [Screenshots](#screenshots)
-- [License](#license)
+## 🎯 Architectural Highlights & SDE Decisions
+
+| Feature / Problem | Naive Implementation | DevPulse SDE Implementation |
+|---|---|---|
+| **Query Latency (N+1 Problem)** | Client fetches user profile for every single comment individually (`useEffect` loop) | Enriched comment model with pre-populated author metadata & Mongoose batch queries, reducing N+1 roundtrips to **0**. |
+| **Token Storage & XSS** | Storing JWT in `localStorage` (vulnerable to script theft) | Strict **`HttpOnly` + `SameSite` + `Secure`** cookie storage with zero JavaScript access. |
+| **Client-Side HTML Injection** | Direct `dangerouslySetInnerHTML` rendering of WYSIWYG HTML | Multi-pass **`DOMPurify`** sanitization preventing stored XSS exploits. |
+| **Brute-Force & DoS Mitigation** | Unrestricted endpoints open to credential-stuffing | Sliding window **`express-rate-limit`** on auth routes (100 req/15min). |
+| **Slug Duplication Crashes** | Unhandled MongoDB `E11000` duplicate key errors on identical post titles | Collision-proof regex slug generator with automatic collision-counter suffix fallback. |
+| **Recruiter Review Friction** | Requires manual account creation and email verification | **1-Click Instant Demo Authentication** (`Demo Admin` & `Demo Author` modes). |
 
 ---
 
-## 🧩 Overview
-MERN Blog is a full-featured blogging web application built using the **MERN stack**.  
-It enables users to:
-- Register or log in securely,
-- Create, update, and view blog posts,
-- Explore posts from other users,
-- Search blogs by keywords or titles.
+## 🏗️ System Architecture
+
+```mermaid
+graph TD
+    Client["React 18 SPA (Vite + Redux Toolkit + Tailwind CSS)"]
+    
+    subgraph Security Layer
+        RateLimiter["express-rate-limit (100 req / 15 min)"]
+        CorsMiddleware["CORS (Credentials Allowed)"]
+        CookieParser["cookie-parser (HttpOnly Access Token)"]
+    end
+    
+    subgraph Express MVC Server
+        API["Express Router (/api)"]
+        HealthEndpoint["/api/health (System Metrics)"]
+        AuthCtrl["Auth Controller (JWT + Demo Login)"]
+        PostCtrl["Post Controller (Slugs, Reads, Views)"]
+        UserCtrl["User Controller (Profile, Bookmarks)"]
+        CommentCtrl["Comment Controller (Zero N+1)"]
+    end
+    
+    subgraph Data Persistence
+        MongoDB[("MongoDB Atlas Cloud Database")]
+        UserColl["Users (Indexed by email & username)"]
+        PostColl["Posts (Indexed by slug & category)"]
+        CommentColl["Comments (Indexed by postId)"]
+    end
+
+    Client -->|HTTP Requests / REST| SecurityLayer
+    Security Layer --> API
+    API --> AuthCtrl
+    API --> PostCtrl
+    API --> UserCtrl
+    API --> CommentCtrl
+    API --> HealthEndpoint
+    
+    AuthCtrl --> UserColl
+    PostCtrl --> PostColl
+    UserCtrl --> UserColl
+    CommentCtrl --> CommentColl
+    
+    PostColl -.->|Schema Population| UserColl
+    CommentColl -.->|Schema Population| UserColl
+```
 
 ---
 
-## ✨ Features
-✅ User Authentication with **JWT**  
-✅ Create, update, delete, and browse blog posts  
-✅ Search functionality for blogs  
-✅ Responsive & modern UI built with **React + Tailwind CSS**  
-✅ Integrated **MongoDB Atlas** for cloud-based data storage  
-✅ Backend built using **Express.js** and **Node.js**  
-✅ Hosted on **Render** (single full-stack deployment)
+## ✨ Comprehensive Feature Matrix
+
+### 👤 Authentication & Role-Based Access Control (RBAC)
+- **Granular Roles**: Administrators have platform-wide moderation rights (manage all users, comments, and metrics). Authors manage their own publications.
+- **1-Click Demo Tour**: Recruiters and hiring managers can test with full admin/author privileges in 1 click without filling forms.
+- **Google OAuth Integration**: Built-in Firebase federated authentication.
+- **Strict Cookie Binding**: Automatic token signing, verification, and revocation on logout.
+
+### 📰 Editorial & Publishing Engine
+- **WYSIWYG Rich Text Editor**: React Quill integration with code snippets and formatted typography.
+- **Dual Cover Image Ingestion**: Supports high-res Unsplash presets, direct URL pasting, and Firebase cloud uploads.
+- **Reading Time Engine**: Accurate algorithm computing word count against average adult reading speeds (200 wpm).
+- **Collision-Proof Slugs**: Automatic transliteration of titles into clean, SEO-friendly, unique URLs.
+
+### ⚡ Reader Engagement & Telemetry
+- **Reading Progress Bar**: Dynamic viewport progress indicator tracking scroll depth on long-form articles.
+- **Real-Time View Counters**: Asynchronously tracks article readership upon page load.
+- **Post Likes & Community Comments**: Instant post liking and threaded, moderated comments with like reactions.
+- **Saved Articles (Bookmarks)**: Personal reading list with instant add/remove capability stored in user profile.
+- **Social Sharing**: 1-click clipboard link copying with toast notification, Twitter/X, and LinkedIn share deep-links.
+
+### 🔍 Search & Multi-Param Filtering
+- **Multi-Vector Search**: Filter by keyword regex, publication category, and ascending/descending dates.
+- **Pagination & Infinite Scrolling**: Controlled server-side offsets and limit parameters.
 
 ---
 
-## 🧠 Tech Stack
-| Layer | Technology |
-|-------|-------------|
-| Frontend | React, Tailwind CSS, React Router |
-| Backend | Node.js, Express.js |
-| Database | MongoDB Atlas |
-| Hosting | Render |
-| Authentication | JWT |
-| Security | bcryptjs |
+## 📡 REST API Reference
+
+### Health & Telemetry
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `GET` | `/api/health` | Public | System uptime, database connectivity state, and timestamp |
+
+### Authentication (`/api/auth`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/signup` | Public | Register new user with validated email, username & password |
+| `POST` | `/api/auth/signin` | Public | Authenticate user & issue HttpOnly JWT cookie |
+| `POST` | `/api/auth/google` | Public | Federated Google OAuth authentication |
+| `POST` | `/api/auth/demo` | Public | **1-Click Reviewer Demo Login** (`admin` or `author` role) |
+
+### Publications (`/api/post`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `GET` | `/api/post/getposts` | Public | Query publications by category, slug, author, searchTerm, sort |
+| `POST` | `/api/post/create` | Authenticated | Create a publication with tags, cover image, and read time |
+| `PUT` | `/api/post/updatepost/:postId/:userId` | Author / Admin | Update post contents, title, tags, or cover |
+| `DELETE` | `/api/post/deletepost/:postId/:userId` | Author / Admin | Permanently delete publication and associated comments |
+| `PUT` | `/api/post/like/:postId` | Authenticated | Toggle like/unlike on an article |
+| `POST` | `/api/post/seed` | Public | Seed sample engineering articles into database |
+
+### Users & Bookmarks (`/api/user`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `PUT` | `/api/user/update/:userId` | Self | Update username, email, avatar, bio, or password |
+| `DELETE` | `/api/user/delete/:userId` | Self / Admin | Delete account and associated sessions |
+| `POST` | `/api/user/signout` | Authenticated | Invalidate and clear HttpOnly access token |
+| `GET` | `/api/user/getusers` | Admin | Retrieve paginated platform users |
+| `PUT` | `/api/user/bookmark/:postId` | Authenticated | Toggle article bookmark in reading list |
+| `GET` | `/api/user/bookmarks/all` | Authenticated | Retrieve all bookmarked publications |
+
+### Comments (`/api/comment`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `POST` | `/api/comment/create` | Authenticated | Post comment with pre-attached author metadata |
+| `GET` | `/api/comment/getPostComments/:postId` | Public | Fetch all comments for a post (Zero N+1 queries) |
+| `PUT` | `/api/comment/likeComment/:commentId` | Authenticated | Like/unlike a comment |
+| `PUT` | `/api/comment/editComment/:commentId` | Author / Admin | Edit comment text |
+| `DELETE` | `/api/comment/deleteComment/:commentId` | Author / Admin | Delete comment |
+| `GET` | `/api/comment/getcomments` | Admin | Moderate all platform comments |
 
 ---
 
-## ⚙️ Installation
+## 🛠️ Local Installation & Development
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/abhi-2029/mern-estate.git
-cd mern-estate
+git clone https://github.com/your-username/devpulse-mern-blog.git
+cd devpulse-mern-blog
+```
 
-2️⃣ Install Dependencies
+### 2️⃣ Install Dependencies
+```bash
+# Install root backend dependencies
 npm install
-npm install --prefix client
 
-3️⃣ Environment Setup
+# Install frontend client dependencies
+cd client
+npm install
+cd ..
+```
 
-Create two .env files:
-  .One in the root for backend
-  .One in the client folder for frontend
+### 3️⃣ Configure Environment Variables
+Create a `.env` file in the root directory:
+```env
+MONGO=mongodb+srv://<username>:<password>@cluster0.mongodb.net/devpulse?retryWrites=true&w=majority
+JWT_SECRET=your_super_secret_jwt_key_here
+PORT=3000
+NODE_ENV=development
+```
 
+Create a `client/.env` file:
+```env
+VITE_FIREBASE_API_KEY=your_optional_firebase_api_key
+```
 
-🔐 Environment Variables
-    Root .env
-MONGO=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-VITE_FIREBASE_API_KEY=your_firebase_api_key
+### 4️⃣ Run in Development Mode
+```bash
+# Terminal 1: Start Express backend server (with nodemon)
+npm run dev
 
-Client .env
-VITE_FIREBASE_API_KEY=your_firebase_api_key
+# Terminal 2: Start Vite React client
+cd client
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-🧱 Project Structure
-mern-blog/
-│
-├── api/                     # Express backend
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   └── index.js             # Entry point for backend server
-│
-├── client/                  # React frontend
-│   ├── public/
-│   ├── src/
-│   │   ├── pages/
-│   │   ├── components/
-│   │   ├── redux/
-│   │   ├── firebase.js
-│   │   └── main.jsx
-│   ├── .env
-│   └── package.json
-│
-├── .gitignore
-├── package.json             # Root package.json (controls both)
-└── README.md
-
-⚡ Deployment (Render)
-
-1️⃣ Push to GitHub
-Make sure your repo includes both api and client folders.
-2️⃣ Configure Render
-Environment: Node
-Build Command:  npm run build
-Start Command:  npm start
-Root Directory: (leave blank)
-Add all environment variables in Render’s dashboard.
-
-3️⃣ Connect Repository
-Once deployed, Render will serve both your backend and frontend from: https://your-app-name.onrender.com
-
-
-🧰 Firebase Setup
-
-1.Go to Firebase Console → Authentication
-2.Enable: Email/Password Authentication
-Google Sign-In
-3.Add authorized domains:
-localhost
-mern-estate-a4f80.firebaseapp.com
-mern-estate-a4f80.web.app
-mern-estate-l7c1.onrender.com
-4.Copy your Firebase config to client/src/firebase.js
-
-🧑‍💻 Author
-
-Shivangi Singh
-🎓 B.Tech 2026 Batch | Full Stack Developer | DSA & C++ Enthusiast
-🔗 LinkedIn
-📧 shivangisingh8688@gmail.com
-
-🪪 License
-
-This project is licensed under the MIT License – free to use, modify, and distribute.
-
-💬 Notes
-
-If you fork or redeploy this app, make sure to:
-  .Add your Render domain in Firebase Authorized Domains
-  .Update .env with your own Firebase and MongoDB credentials
-  .Enable Google reCAPTCHA for your new domain
-
-⭐ If you found this project helpful, don’t forget to give it a star on GitHub!
+### 5️⃣ Production Build & Single-Port Serving
+```bash
+npm run build
+npm start
+```
+The Express server will build the Vite bundle and serve it statically from `http://localhost:3000`.
 
 ---
 
-Would you like me to also include a **short LinkedIn post description** to announce this project professionally (for better engagement)?
+## 👩‍💻 Engineer & Author
+ 
+**Shivangi Singh**  
+*Computer Science & Engineering Undergrad (B.Tech 2022–2026)*  
+*Lovely Professional University, Punjab, India (CGPA: 7.8)*  
+- **Role Focus**: Software Development Engineer (SDE) — Full-Stack Web Systems, Distributed Architectures, Algorithmic Engineering  
+- **DSA Achievements**: 300+ LeetCode problems solved (200+ active days), 5-Star HackerRank in C++, Python & SQL  
+- **Certifications**: Cisco Python Essentials 2, IBM Data Literacy, HackerRank SQL (Advanced)  
+- **Email**: [shivangisingh8688@gmail.com](mailto:shivangisingh8688@gmail.com)  
+- **Phone**: [+91 8688128210](tel:+918688128210)  
+- **LinkedIn**: [https://linkedin.com/in/shivangisingh04/](https://linkedin.com/in/shivangisingh04/)  
+- **GitHub**: [https://github.com/shivangi792004](https://github.com/shivangi792004)  
+
+---
+
+## 🪪 License
+Distributed under the **MIT License**. Free for commercial and personal usage.

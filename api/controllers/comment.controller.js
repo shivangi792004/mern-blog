@@ -1,8 +1,14 @@
 import Comment from '../models/comment.model.js';
+import User from '../models/user.model.js';
+import { errorHandler } from '../utils/error.js';
 
 export const createComment = async (req, res, next) => {
   try {
     const { content, postId, userId } = req.body;
+
+    if (!content || content.trim() === '') {
+      return next(errorHandler(400, 'Comment content cannot be empty'));
+    }
 
     if (userId !== req.user.id) {
       return next(
@@ -10,10 +16,21 @@ export const createComment = async (req, res, next) => {
       );
     }
 
+    // Attach author details directly to eliminate N+1 frontend requests
+    let authorName = '';
+    let authorAvatar = '';
+    const author = await User.findById(userId).select('username profilePicture');
+    if (author) {
+      authorName = author.username;
+      authorAvatar = author.profilePicture;
+    }
+
     const newComment = new Comment({
-      content,
+      content: content.trim(),
       postId,
       userId,
+      authorName,
+      authorAvatar,
     });
     await newComment.save();
 
@@ -28,7 +45,23 @@ export const getPostComments = async (req, res, next) => {
     const comments = await Comment.find({ postId: req.params.postId }).sort({
       createdAt: -1,
     });
-    res.status(200).json(comments);
+
+    // Ensure all comments have author details, backfilling if missing
+    const enrichedComments = await Promise.all(
+      comments.map(async (comment) => {
+        const commentObj = comment.toObject();
+        if (!commentObj.authorName || !commentObj.authorAvatar) {
+          const user = await User.findById(comment.userId).select('username profilePicture');
+          if (user) {
+            commentObj.authorName = user.username;
+            commentObj.authorAvatar = user.profilePicture;
+          }
+        }
+        return commentObj;
+      })
+    );
+
+    res.status(200).json(enrichedComments);
   } catch (error) {
     next(error);
   }
@@ -45,7 +78,7 @@ export const likeComment = async (req, res, next) => {
       comment.numberOfLikes += 1;
       comment.likes.push(req.user.id);
     } else {
-      comment.numberOfLikes -= 1;
+      comment.numberOfLikes = Math.max(0, comment.numberOfLikes - 1);
       comment.likes.splice(userIndex, 1);
     }
     await comment.save();
@@ -67,10 +100,14 @@ export const editComment = async (req, res, next) => {
       );
     }
 
+    if (!req.body.content || req.body.content.trim() === '') {
+      return next(errorHandler(400, 'Content cannot be empty'));
+    }
+
     const editedComment = await Comment.findByIdAndUpdate(
       req.params.commentId,
       {
-        content: req.body.content,
+        content: req.body.content.trim(),
       },
       { new: true }
     );
