@@ -279,160 +279,8 @@ export const likePost = async (req, res, next) => {
   }
 };
 
-// 12 Real, Production-Grade Engineering Publications by Shivangi Singh
-export const REAL_TECHNICAL_BLOGS = [
-  {
-    title: 'Architecting High-Throughput Distributed Microservices with Node.js & Redis',
-    category: 'architecture',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>Scaling Backend Systems Beyond 10,000 Requests/Second</h2><p>When scaling modern distributed systems, horizontal scalability and caching strategies become paramount. In this article, we dissect the architecture of high-throughput Node.js microservices backed by Redis and MongoDB.</p><h3>1. Cache-Aside Pattern with Redis</h3><p>By implementing an asynchronous Cache-Aside pattern with intelligent TTLs and invalidation pipelines, we reduce primary database strain by over 85%.</p><pre><code>const getCachedData = async (key, fetchCallback, ttl = 300) => {
-  const cached = await redisClient.get(key);
-  if (cached) return JSON.parse(cached);
-  const fresh = await fetchCallback();
-  await redisClient.set(key, JSON.stringify(fresh), 'EX', ttl);
-  return fresh;
-};</code></pre><h3>2. Connection Pooling & Event Loop Monitoring</h3><p>Node.js runs single-threaded for JavaScript execution. To prevent event loop starvation, compute-heavy tasks must be offloaded to worker threads or background job queues like BullMQ.</p>`,
-    tags: ['System Design', 'Node.js', 'Redis', 'Microservices'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 1420,
-    numberOfLikes: 84,
-  },
-  {
-    title: 'Mastering React 19: Server Components, Actions, and Optimistic UI',
-    category: 'reactjs',
-    readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>The Evolution of Modern Frontend Engineering</h2><p>React 19 marks a fundamental shift towards full-stack component primitives, native async action transitions, and built-in optimistic rendering hooks like <code>useOptimistic</code>.</p><h3>Why useActionState Changes Everything</h3><p>Managing loading states, pending actions, and error payloads manually is now replaced with native server actions and transitions.</p><h3>Zero-Bundle-Size Server Components</h3><p>Server components execute exclusively on the server, drastically trimming JavaScript bundles sent down the wire and speeding up First Contentful Paint (FCP).</p>`,
-    tags: ['React', 'Frontend', 'Web Dev', 'JavaScript'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 2190,
-    numberOfLikes: 132,
-  },
-  {
-    title: 'MongoDB Indexing Strategies: B-Trees, Compound Indexes & Query Optimization',
-    category: 'database',
-    readTime: '7 min read',
-    image: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>Understanding Query Execution Plans in MongoDB</h2><p>Without well-planned compound indexes, queries degrade from index scans to full collection scans (COLLSCAN), exhausting I/O and spiking latency.</p><h3>The Equality, Sort, Range (ESR) Rule</h3><p>When creating compound indexes, always follow the ESR rule: 1) Equality fields first, 2) Sort fields second, 3) Range fields last.</p><pre><code>// Optimal compound index following ESR:
-db.posts.createIndex({ category: 1, updatedAt: -1, views: 1 });</code></pre>`,
-    tags: ['MongoDB', 'Databases', 'Performance', 'Backend'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 940,
-    numberOfLikes: 57,
-  },
-  {
-    title: 'Zero Trust Security in Web Applications: From JWTs to Defense-in-Depth',
-    category: 'security',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>Hardening Modern Web APIs Against Modern Threat Vectors</h2><p>Security is not an afterthought; it is an architectural pillar. In this deep dive, we explore CSRF protection, HttpOnly cookie storage, Content Security Policy (CSP), and Rate Limiting.</p><h3>Why LocalStorage is Insecure for Auth Tokens</h3><p>Storing JWTs in LocalStorage leaves them vulnerable to Cross-Site Scripting (XSS). HttpOnly, SameSite cookies with strict domain binding provide resilient protection against token theft.</p>`,
-    tags: ['Security', 'DevSecOps', 'Authentication', 'JWT'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 1850,
-    numberOfLikes: 110,
-  },
-  {
-    title: 'Building Resilient Event-Driven Microservices with Kafka & RabbitMQ',
-    category: 'architecture',
-    readTime: '8 min read',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>Decoupled Systems Architecture for High-Scale Applications</h2><p>Synchronous REST calls between microservices create cascading failure domains. Event-driven architectures leverage asynchronous message brokers to decouple producer and consumer services, ensuring fault tolerance and horizontal scale.</p><h3>Message Ordering, Consumer Groups & Partitions</h3><p>By partitioning topics on deterministic partition keys, Kafka ensures sequential processing of stateful entities while enabling high-parallelism across consumer clusters.</p>`,
-    tags: ['Event-Driven', 'Kafka', 'RabbitMQ', 'Architecture'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 1620,
-    numberOfLikes: 95,
-  },
-  {
-    title: 'Next.js 15 Deep Dive: Partial Prerendering, Server Actions & Streaming SSR',
-    category: 'nextjs',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>Next-Generation Hybrid Rendering</h2><p>Next.js 15 introduces Partial Prerendering (PPR), bridging the gap between instantaneous static shell delivery and streaming dynamic components within a single HTTP request.</p><h3>Optimizing Cumulative Layout Shift (CLS)</h3><p>Using React Suspense boundaries around async data-fetching nodes allows the initial HTML payload to stream immediately while dynamic components hydrate as data arrives.</p>`,
-    tags: ['Next.js', 'React', 'SSR', 'Web Performance'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 2450,
-    numberOfLikes: 160,
-  },
-  {
-    title: 'Database Sharding vs Partitioning: Horizontal Scaling Strategies at Scale',
-    category: 'database',
-    readTime: '7 min read',
-    image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>Overcoming the Single-Node Write Ceiling</h2><p>When write throughput exceeds the capabilities of a single database primary, architects must choose between vertical scaling, read-replica offloading, and horizontal sharding.</p><h3>Range-Based vs Hash-Based Sharding</h3><p>We analyze shard key selection algorithms to avoid hot-shard skewing and balance write transactions uniformly across distributed database clusters.</p>`,
-    tags: ['Databases', 'Sharding', 'System Design', 'Scale'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 1110,
-    numberOfLikes: 73,
-  },
-  {
-    title: 'Reliable Background Task Processing with BullMQ, Redis, and Worker Threads',
-    category: 'javascript',
-    readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>Offloading Heavy Compute from the Node.js Event Loop</h2><p>Image processing, PDF report generation, and transactional email dispatch should never block synchronous HTTP request cycles.</p><h3>Implementing BullMQ Worker Pools</h3><p>By leveraging Redis-backed priority queues, exponential backoff retries, and dead-letter queues (DLQ), we guarantee at-least-once job delivery without service crashes.</p>`,
-    tags: ['Node.js', 'BullMQ', 'Worker Threads', 'Async'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 1340,
-    numberOfLikes: 89,
-  },
-  {
-    title: 'Eliminating the N+1 Query Problem in REST APIs: Schema Optimization & Batching',
-    category: 'architecture',
-    readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>The Latency Trap of Naive Nested Queries</h2><p>The N+1 query problem is one of the most common backend performance bugs. In this article, we demonstrate how embedding author metadata and utilizing batch population reduces database roundtrips from O(N) to O(1).</p><h3>Benchmarking Response Times</h3><p>In our tests, eliminating nested queries reduced page load times from 840ms to 62ms for articles with 50+ user comments.</p>`,
-    tags: ['REST API', 'Optimization', 'Performance', 'Database'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 2980,
-    numberOfLikes: 215,
-  },
-  {
-    title: 'Designing an Idempotent Payment & Webhook Architecture in Node.js',
-    category: 'architecture',
-    readTime: '7 min read',
-    image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>Preventing Duplicate Transactions in Network Glitches</h2><p>In financial systems and external webhook integrations, network retries are inevitable. Designing idempotent endpoints guarantees that repeating a request yields the exact same outcome without duplicate billing.</p><h3>Idempotency Keys & Distributed Locks</h3><p>Using Redis SETNX locks and unique transaction keys, incoming requests are checked before committing database updates.</p>`,
-    tags: ['FinTech', 'Architecture', 'Idempotency', 'Node.js'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 1780,
-    numberOfLikes: 124,
-  },
-  {
-    title: 'Web Vitals & Frontend Performance: Optimizing INP, LCP, and CLS',
-    category: 'reactjs',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>Mastering Interaction to Next Paint (INP) in 2026</h2><p>Google has officially replaced FID with INP as a Core Web Vital. We explore code splitting with dynamic <code>import()</code>, passive scroll listeners, and web worker offloading to maintain 60 FPS under load.</p><h3>Eliminating Layout Shifts</h3><p>Specifying explicit aspect ratios and reserved dimensions for media elements eliminates unexpected layout shifts (CLS) on mobile devices.</p>`,
-    tags: ['Web Vitals', 'Performance', 'React', 'Frontend'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 2100,
-    numberOfLikes: 147,
-  },
-  {
-    title: 'Containerizing Full-Stack MERN Architectures with Docker & Multi-Stage Builds',
-    category: 'devops',
-    readTime: '6 min read',
-    image: 'https://images.unsplash.com/photo-1605745341112-85968b19335b?auto=format&fit=crop&w=1200&q=80',
-    content: `<h2>From Local Development to Production Kubernetes</h2><p>Multi-stage Docker builds allow us to separate the build-time toolchain from the minimal production runtime container, shrinking image sizes from 1.2GB to under 140MB.</p><h3>Non-Root Container Security</h3><p>Running Node.js processes as a non-root user within Alpine Linux containers mitigates privilege escalation vulnerabilities.</p>`,
-    tags: ['Docker', 'DevOps', 'Kubernetes', 'Cloud'],
-    authorName: 'Shivangi Singh',
-    authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-    views: 1890,
-    numberOfLikes: 138,
-  },
-];
+import { REAL_TECHNICAL_BLOGS } from '../data/technicalBlogs.js';
+export { REAL_TECHNICAL_BLOGS };
 
 // Ensure slug, _id, authorAvatar, and dates exist on each blog for instant offline and preview fallback
 REAL_TECHNICAL_BLOGS.forEach((post, idx) => {
@@ -505,37 +353,35 @@ export const seedSamplePosts = async (req, res, next) => {
 
 export const ensureSeedData = async () => {
   try {
-    const count = await Post.countDocuments();
-    if (count < 10) {
-      console.log(`Database has ${count} posts. Auto-seeding 12 real technical articles...`);
-      let defaultUser = await User.findOne({ email: 'shivangisingh8688@gmail.com' });
-      if (!defaultUser) {
-        const bcryptjs = (await import('bcryptjs')).default;
-        const hashedPassword = bcryptjs.hashSync('demo123456', 10);
-        defaultUser = await User.create({
-          username: 'shivangi',
-          email: 'shivangisingh8688@gmail.com',
-          password: hashedPassword,
-          isAdmin: true,
-          profilePicture: '/shivangi.jpg',
-          bio: 'Shivangi Singh — B.Tech CSE (2022–2026), Lovely Professional University. Aspiring Software Development Engineer (SDE).',
-        });
-      }
-      for (const post of REAL_TECHNICAL_BLOGS) {
-        const slug = await generateUniqueSlug(post.title);
-        const { _id, ...postData } = post;
-        await Post.findOneAndUpdate(
-          { slug },
-          {
-            ...postData,
-            slug,
-            userId: defaultUser._id.toString(),
-          },
-          { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
-      }
-      console.log('Auto-seeded 12 technical publications successfully into MongoDB Atlas!');
+    let defaultUser = await User.findOne({ email: 'shivangisingh8688@gmail.com' });
+    if (!defaultUser) {
+      const bcryptjs = (await import('bcryptjs')).default;
+      const hashedPassword = bcryptjs.hashSync('demo123456', 10);
+      defaultUser = await User.create({
+        username: 'shivangi',
+        email: 'shivangisingh8688@gmail.com',
+        password: hashedPassword,
+        isAdmin: true,
+        profilePicture: '/shivangi.jpg',
+        bio: 'Shivangi Singh — B.Tech CSE (2022–2026), Lovely Professional University. Aspiring Software Development Engineer (SDE).',
+      });
     }
+    for (const post of REAL_TECHNICAL_BLOGS) {
+      const slug = await generateUniqueSlug(post.title);
+      const { _id, ...postData } = post;
+      await Post.findOneAndUpdate(
+        { title: post.title },
+        {
+          ...postData,
+          slug,
+          authorAvatar: '/shivangi.jpg',
+          authorName: 'Shivangi Singh',
+          userId: defaultUser._id.toString(),
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+    console.log('Synchronized comprehensive engineering publications into MongoDB Atlas!');
   } catch (err) {
     console.warn('Auto-seed notice:', err.message);
   }
