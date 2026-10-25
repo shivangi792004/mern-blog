@@ -125,13 +125,6 @@ export default function FooterCom() {
                 <span>✉️</span>
                 <span>shivangisingh8688@gmail.com</span>
               </a>
-              <a
-                href='tel:+918688128210'
-                className='inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors'
-              >
-                <span>📞</span>
-                <span>+91 8688128210</span>
-              </a>
             </div>
           </div>
 

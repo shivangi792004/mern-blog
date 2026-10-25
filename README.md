@@ -202,7 +202,6 @@ The Express server will build the Vite bundle and serve it statically from `http
 - **DSA Achievements**: 300+ LeetCode problems solved (200+ active days), 5-Star HackerRank in C++, Python & SQL  
 - **Certifications**: Cisco Python Essentials 2, IBM Data Literacy, HackerRank SQL (Advanced)  
 - **Email**: [shivangisingh8688@gmail.com](mailto:shivangisingh8688@gmail.com)  
-- **Phone**: [+91 8688128210](tel:+918688128210)  
 - **LinkedIn**: [https://linkedin.com/in/shivangisingh04/](https://linkedin.com/in/shivangisingh04/)  
 - **GitHub**: [https://github.com/shivangi792004](https://github.com/shivangi792004)  
 

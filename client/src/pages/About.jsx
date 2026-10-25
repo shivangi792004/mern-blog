@@ -7,7 +7,6 @@ import {
   HiCode,
   HiChip,
   HiOutlineMail,
-  HiPhone,
   HiSparkles,
 } from 'react-icons/hi';
 import { BsGithub, BsLinkedin } from 'react-icons/bs';
@@ -121,12 +120,6 @@ export default function About() {
             <a href='mailto:shivangisingh8688@gmail.com'>
               <Button size='xs' color='light' className='font-semibold'>
                 <HiOutlineMail className='mr-1.5 text-sm text-rose-500' /> shivangisingh8688@gmail.com
-              </Button>
-            </a>
-
-            <a href='tel:+918688128210'>
-              <Button size='xs' color='light' className='font-semibold'>
-                <HiPhone className='mr-1.5 text-sm text-emerald-500' /> +91 8688128210
               </Button>
             </a>
           </div>
